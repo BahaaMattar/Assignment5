@@ -8,9 +8,12 @@ use App\Models\Student;
 class StudentController extends Controller
 {
     // Display a list of students
-    public function index()
+    public function index(Request $request)
     {
-        $students = Student::all(); // Later: add filtering logic
+        $students=Student::all();
+        if ($request->ajax()) {
+            return view('partials.table', compact('students'));
+        }
         return view('index', compact('students'));
     }
 
@@ -35,6 +38,35 @@ class StudentController extends Controller
 
         return redirect()->route('index')->with('success', 'Student added successfully!');
     }
+    public function filter(Request $request)
+    {
+        $search = $request->get('search');
+        $minAge = $request->get('min_age');
+        $maxAge = $request->get('max_age');
+    
+        $students = Student::query();
+    
+        // Apply search filter
+        if ($search) {
+            $students->where('name', 'like', '%' . $search . '%');
+        }
+    
+        // Apply age range filter
+        if ($minAge) {
+            $students->where('age', '>=', $minAge);
+        }
+        if ($maxAge) {
+            $students->where('age', '<=', $maxAge);
+        }
+    
+        // Get the filtered students
+        $students = $students->get();
+    
+        return view('partials.table', compact('students'));
+    }
+    
+
+
 
     public function show($id) {}
     public function edit($id) {}
